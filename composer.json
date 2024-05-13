@@ -2,6 +2,7 @@
   "name": "josebaroni/jobmonitor",
   "type": "library",
   "description": "JobMonitor is a Laravel package created to track Job resources usage and find stuck queue workers.",
+  "license": "MIT",
   "autoload": {
     "psr-4": {
       "JoseBaroni\\JobMonitor\\": "src/"

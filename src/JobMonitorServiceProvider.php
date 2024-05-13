@@ -25,7 +25,10 @@ class JobMonitorServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'jobmonitor');
 
-        $shouldBootMonitor = config('jobmonitor.enabled', false) && ! $this->app->runningUnitTests();
+        $shouldBootMonitor =
+            config('jobmonitor.enabled', false) &&
+            ! $this->app->runningUnitTests() &&
+            $this->app->runningInConsole();
 
         if ($shouldBootMonitor) {
             $workerManager = resolve(WorkerManager::class);

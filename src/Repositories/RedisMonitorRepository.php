@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Redis;
 use JoseBaroni\JobMonitor\JobMetrics;
 use JoseBaroni\JobMonitor\JobProcessingState;
 use JoseBaroni\JobMonitor\WorkerProcess;
-use Predis\ClientInterface;
 
 class RedisMonitorRepository implements MonitorRepository
 {
@@ -14,7 +13,7 @@ class RedisMonitorRepository implements MonitorRepository
     private const JOB_WORKER_PREFIX_KEY = 'job_worker:';
     private const JOBS_METRICS_KEY = 'jobs_metrics';
 
-    private ClientInterface $redis;
+    private mixed $redis;
 
     public function __construct()
     {

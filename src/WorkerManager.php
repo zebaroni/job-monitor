@@ -22,14 +22,14 @@ class WorkerManager
         $this->pid = getmypid();
     }
 
-    public function boot()
+    public function boot(): void
     {
         $this->registerSignalHooks();
         $this->removeOrphanProcesses();
         $this->bindQueueHooks();
     }
 
-    private function bindQueueHooks()
+    private function bindQueueHooks(): void
     {
         $jobProcessingState = new JobProcessingState(
             $this->worker,
@@ -58,7 +58,7 @@ class WorkerManager
         });
     }
 
-    private function removeOrphanProcesses()
+    private function removeOrphanProcesses(): void
     {
         $processes = $this->monitorRepository->getWorkerProcesses($this->worker);
 
@@ -71,7 +71,7 @@ class WorkerManager
         }
     }
 
-    private function signalCallback()
+    private function signalCallback(): void
     {
         try {
             $this->monitorRepository->removeWorkerProcess($this->worker, $this->pid);
@@ -81,7 +81,7 @@ class WorkerManager
         }
     }
 
-    private function registerSignalHooks()
+    private function registerSignalHooks(): void
     {
         pcntl_async_signals(true);
         pcntl_signal(SIGHUP, fn() => $this->signalCallback());

@@ -9,7 +9,7 @@ use JoseBaroni\JobMonitor\Repositories\MonitorRepository;
 
 class JobMonitorServiceProvider extends ServiceProvider
 {
-    public function boot()
+    public function boot(): void
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([

@@ -21,6 +21,10 @@
       ]
     }
   },
+  "require": {
+    "ext-pcntl": "*",
+    "ext-posix": "*"
+  },
   "require-dev": {
     "orchestra/testbench": "^6.43"
   }

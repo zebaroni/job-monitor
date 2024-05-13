@@ -1,0 +1,25 @@
+{
+  "name": "josebaroni/jobmonitor",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "JoseBaroni\\JobMonitor\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Jose Baroni",
+      "email": "zerenatobaroni@gmail.com"
+    }
+  ],
+  "extra": {
+    "laravel": {
+      "providers": [
+        "JoseBaroni\\JobMonitor\\JobMonitorServiceProvider"
+      ]
+    }
+  },
+  "require-dev": {
+    "orchestra/testbench": "^6.43"
+  }
+}

@@ -2,6 +2,7 @@
 
 namespace JoseBaroni\JobMonitor\Repositories;
 
+use Illuminate\Contracts\Redis\Factory;
 use Illuminate\Support\Facades\Redis;
 use JoseBaroni\JobMonitor\JobMetrics;
 use JoseBaroni\JobMonitor\JobProcessingState;
@@ -13,11 +14,14 @@ class RedisMonitorRepository implements MonitorRepository
     private const JOB_WORKER_PREFIX_KEY = 'job_worker:';
     private const JOBS_METRICS_KEY = 'jobs_metrics';
 
-    private mixed $redis;
+    /**
+     * @var Factory
+     */
+    private $redis;
 
     public function __construct()
     {
-        $this->redis = Redis::connection(config('jobmonitor.redis_connection'))->client();
+        $this->redis = Redis::connection(config('jobmonitor.redis_connection'));
     }
 
     public function getAllWorkers(): array

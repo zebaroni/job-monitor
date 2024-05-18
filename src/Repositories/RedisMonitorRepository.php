@@ -2,11 +2,11 @@
 
 namespace JoseBaroni\JobMonitor\Repositories;
 
-use Illuminate\Contracts\Redis\Factory;
 use Illuminate\Support\Facades\Redis;
 use JoseBaroni\JobMonitor\JobMetrics;
 use JoseBaroni\JobMonitor\JobProcessingState;
 use JoseBaroni\JobMonitor\WorkerProcess;
+use Illuminate\Redis\Connections\Connection;
 
 class RedisMonitorRepository implements MonitorRepository
 {
@@ -14,10 +14,7 @@ class RedisMonitorRepository implements MonitorRepository
     private const JOB_WORKER_PREFIX_KEY = 'job_worker:';
     private const JOBS_METRICS_KEY = 'jobs_metrics';
 
-    /**
-     * @var Factory
-     */
-    private $redis;
+    private Connection $redis;
 
     public function __construct()
     {
@@ -31,7 +28,7 @@ class RedisMonitorRepository implements MonitorRepository
 
         foreach ($workersAndPids as $workerAndPid) {
             $workerName = explode(':', $workerAndPid)[0];
-            if (! in_array($workerName, $workers)) {
+            if (!in_array($workerName, $workers)) {
                 $workers[] = $workerName;
             }
         }
@@ -84,25 +81,23 @@ class RedisMonitorRepository implements MonitorRepository
 
     public function removeWorkerProcess(string $worker, int $pid): void
     {
-        $pipeline = $this->redis->pipeline();
-        $pipeline->hdel(self::JOB_WORKER_PREFIX_KEY . $worker, [$pid]);
-        $pipeline->srem(self::ALL_WORKER_PROCESSES_KEY, "{$worker}:{$pid}");
-        $pipeline->execute();
+        $this->redis->pipeline(function($pipeline) use($worker, $pid) {
+            $pipeline->hdel(self::JOB_WORKER_PREFIX_KEY . $worker, $pid);
+            $pipeline->srem(self::ALL_WORKER_PROCESSES_KEY, "{$worker}:{$pid}");
+        });
     }
 
     public function startJobProcessing(JobProcessingState $state): void
     {
-        $pipeline = $this->redis->pipeline();
+        $this->redis->pipeline(function($pipeline) use($state) {
+            $pipeline->hset(self::JOB_WORKER_PREFIX_KEY . $state->worker, $state->pid, json_encode([
+                'job_type' => $state->currentJobType,
+                'job_id' => $state->currentJobId,
+                'start_time' => $state->currentJobStartTime
+            ]));
 
-        $pipeline->hset(self::JOB_WORKER_PREFIX_KEY . $state->worker, $state->pid, json_encode([
-            'job_type' => $state->currentJobType,
-            'job_id' => $state->currentJobId,
-            'start_time' => $state->currentJobStartTime
-        ]));
-
-        $pipeline->sadd(self::ALL_WORKER_PROCESSES_KEY, ["{$state->worker}:{$state->pid}"]);
-
-        $pipeline->execute();
+            $pipeline->sadd(self::ALL_WORKER_PROCESSES_KEY, "{$state->worker}:{$state->pid}");
+        });
     }
 
     public function finishJobProcessing(JobProcessingState $state)
@@ -176,22 +171,21 @@ LUA;
 
     public function removeAllWorkers(): void
     {
-        $pipeline = $this->redis->pipeline();
+        $this->redis->pipeline(function($pipeline) {
+            $workers = $this->getAllWorkers();
 
-        $workers = $this->getAllWorkers();
-        foreach ($workers as $worker) {
-            $pipeline->del(self::JOB_WORKER_PREFIX_KEY . $worker);
-        }
+            foreach ($workers as $worker) {
+                $pipeline->del(self::JOB_WORKER_PREFIX_KEY . $worker);
+            }
 
-        $pipeline->del(self::ALL_WORKER_PROCESSES_KEY);
-        $pipeline->execute();
+            $pipeline->del(self::ALL_WORKER_PROCESSES_KEY);
+        });
     }
 
     public function removeAllJobsMetrics(): void
     {
         $this->redis->del(self::JOBS_METRICS_KEY);
     }
-
 
     private function rutime(array $cpuAfter, array $cpuBefore, string $index): float
     {
